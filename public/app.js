@@ -86,9 +86,31 @@ function render(data) {
   `;
 }
 
+window.renderCoupon = render;
+
 function showError(error) {
   errorBox.hidden = false;
   errorBox.textContent = error instanceof Error ? error.message : "대조하지 못했습니다.";
+}
+
+function bindFileName(input) {
+  const nameEl = input.closest("label")?.querySelector(".file-name");
+  if (!nameEl) return;
+  const empty = "선택된 파일 없음";
+  const update = () => {
+    const selected = input.files[0];
+    nameEl.textContent = selected ? selected.name : empty;
+    nameEl.classList.toggle("is-empty", !selected);
+  };
+  input.addEventListener("change", update);
+  update();
+}
+
+bindFileName(document.querySelector("#settlement-file"));
+bindFileName(document.querySelector("#internal-file"));
+
+if (location.hash === "#sample") {
+  fetch("/api/sample").then((response) => response.json()).then(render);
 }
 
 document.querySelector("#upload").addEventListener("submit", async (event) => {
