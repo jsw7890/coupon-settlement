@@ -93,24 +93,48 @@ function showError(error) {
   errorBox.textContent = error instanceof Error ? error.message : "대조하지 못했습니다.";
 }
 
+const emptyReport = "파일을 두 칸에 넣은 뒤 ‘정산 대조’를 누르면 결과가 나옵니다. 파일이 없으면 샘플 자료로 대조합니다.";
+
 function bindFileName(input) {
   const nameEl = input.closest("label")?.querySelector(".file-name");
   if (!nameEl) return;
-  const empty = "선택된 파일 없음";
+  const fallback = nameEl.dataset.defaultName || "선택된 파일 없음";
   const update = () => {
     const selected = input.files[0];
-    nameEl.textContent = selected ? selected.name : empty;
-    nameEl.classList.toggle("is-empty", !selected);
+    nameEl.textContent = selected ? selected.name : fallback;
+    nameEl.classList.toggle("is-empty", !selected && !nameEl.dataset.defaultName);
   };
   input.addEventListener("change", update);
   update();
 }
 
+function resetFileLabels() {
+  document.querySelectorAll(".file-name").forEach((el) => {
+    const fallback = el.dataset.defaultName || "선택된 파일 없음";
+    el.textContent = fallback;
+    el.classList.toggle("is-empty", !el.dataset.defaultName);
+  });
+}
+
 bindFileName(document.querySelector("#settlement-file"));
 bindFileName(document.querySelector("#internal-file"));
 
+async function loadSample() {
+  const response = await fetch("/api/sample");
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || "샘플 자료를 불러오지 못했습니다.");
+  render(body);
+}
+
+function resetView() {
+  errorBox.hidden = true;
+  document.querySelector("#upload").reset();
+  resetFileLabels();
+  report.innerHTML = `<p class="muted">${emptyReport}</p>`;
+}
+
 if (location.hash === "#sample") {
-  fetch("/api/sample").then((response) => response.json()).then(render);
+  loadSample().catch(showError);
 }
 
 document.querySelector("#upload").addEventListener("submit", async (event) => {
@@ -119,6 +143,10 @@ document.querySelector("#upload").addEventListener("submit", async (event) => {
   const settlementFile = document.querySelector("#settlement-file").files[0];
   const internalFile = document.querySelector("#internal-file").files[0];
   try {
+    if (!settlementFile || !internalFile) {
+      await loadSample();
+      return;
+    }
     const response = await fetch("/api/reconcile", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -134,3 +162,5 @@ document.querySelector("#upload").addEventListener("submit", async (event) => {
     showError(error);
   }
 });
+
+document.querySelector("#reset-run")?.addEventListener("click", resetView);

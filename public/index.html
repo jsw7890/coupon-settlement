@@ -16,29 +16,30 @@
         <div class="upload-fields">
           <label class="file-field">
             <span class="file-title">쿠폰사 정산 파일</span>
-            <input id="settlement-file" type="file" accept=".csv,.xlsx,text/csv" required>
+            <input id="settlement-file" type="file" accept=".csv,.xlsx,text/csv">
             <span class="file-control">
               <span class="file-button">파일 선택</span>
-              <span class="file-name is-empty">선택된 파일 없음</span>
+              <span class="file-name" data-default-name="업체전달샘플_쿠폰사_정산내역.csv">업체전달샘플_쿠폰사_정산내역.csv</span>
             </span>
-            <span class="muted">업체전달샘플_쿠폰사_정산내역.csv</span>
           </label>
           <label class="file-field">
             <span class="file-title">가맹점 내부 자료</span>
-            <input id="internal-file" type="file" accept=".csv,.xlsx,text/csv" required>
+            <input id="internal-file" type="file" accept=".csv,.xlsx,text/csv">
             <span class="file-control">
               <span class="file-button">파일 선택</span>
-              <span class="file-name is-empty">선택된 파일 없음</span>
+              <span class="file-name" data-default-name="업체전달샘플_가맹점_내부자료.csv">업체전달샘플_가맹점_내부자료.csv</span>
             </span>
-            <span class="muted">업체전달샘플_가맹점_내부자료.csv</span>
           </label>
         </div>
-        <button type="submit">올린 파일로 대조</button>
+        <div class="upload-actions">
+          <button type="submit">정산 대조</button>
+          <button type="button" id="reset-run" class="secondary">초기화</button>
+        </div>
       </form>
     </header>
     <p id="error" class="error" hidden></p>
     <section id="report">
-      <p class="muted">파일을 두 칸에 넣은 뒤 ‘올린 파일로 대조’를 누르면 결과가 나옵니다.</p>
+      <p class="muted">파일을 두 칸에 넣은 뒤 ‘정산 대조’를 누르면 결과가 나옵니다. 파일이 없으면 샘플 자료로 대조합니다.</p>
     </section>
   </main>
   <script type="module" src="/app.js"></script>

@@ -34,6 +34,13 @@ button {
 
 button.secondary { background: white; color: #1c2430; border: 1px solid #c9c2b2; }
 
+.upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .upload {
   display: grid;
   gap: 1rem;
