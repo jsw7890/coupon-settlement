@@ -86,8 +86,19 @@ const server = createServer(async (request, response) => {
   }
 });
 
+server.on("error", (error) => {
+  if (error && error.code === "EADDRINUSE") {
+    console.error(`포트 ${port}가 이미 사용 중입니다. 브라우저에서 http://127.0.0.1:${port} 을 열어 보세요.`);
+    process.exit(1);
+  }
+  throw error;
+});
+
 server.listen(port, "127.0.0.1", () => {
   const address = `http://127.0.0.1:${port}`;
   console.log(address);
-  if (process.argv.includes("--open")) exec(`start ${address}`);
+  if (process.argv.includes("--open")) {
+    exec(`cmd /c start "" "${address}"`);
+  }
 });
+
