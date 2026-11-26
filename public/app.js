@@ -11,15 +11,6 @@ function esc(value) {
   }[char]));
 }
 
-async function filePayload(file) {
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  let binary = "";
-  for (let index = 0; index < bytes.length; index += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
-  }
-  return { name: file.name, base64: btoa(binary) };
-}
-
 function won(value) {
   const sign = value < 0 ? "-" : "";
   return `${sign}${Math.abs(value).toLocaleString("ko-KR")}원`;
@@ -86,13 +77,6 @@ function render(data) {
   `;
 }
 
-window.renderCoupon = render;
-
-function showError(error) {
-  errorBox.hidden = false;
-  errorBox.textContent = error instanceof Error ? error.message : "대조하지 못했습니다.";
-}
-
 const emptyReport = "파일을 두 칸에 넣은 뒤 ‘정산 대조’를 누르면 결과가 나옵니다. 파일이 없으면 샘플 자료로 대조합니다.";
 
 function bindFileName(input) {
@@ -108,59 +92,33 @@ function bindFileName(input) {
   update();
 }
 
-function resetFileLabels() {
-  document.querySelectorAll(".file-name").forEach((el) => {
-    const fallback = el.dataset.defaultName || "선택된 파일 없음";
-    el.textContent = fallback;
-    el.classList.toggle("is-empty", !el.dataset.defaultName);
-  });
-}
-
 bindFileName(document.querySelector("#settlement-file"));
 bindFileName(document.querySelector("#internal-file"));
 
 async function loadSample() {
-  const response = await fetch("/api/sample");
-  const body = await response.json();
-  if (!response.ok) throw new Error(body.error || "샘플 자료를 불러오지 못했습니다.");
-  render(body);
+  errorBox.hidden = true;
+  const response = await fetch("./sample.json");
+  if (!response.ok) throw new Error("샘플 자료를 불러오지 못했습니다.");
+  render(await response.json());
 }
 
 function resetView() {
   errorBox.hidden = true;
   document.querySelector("#upload").reset();
-  resetFileLabels();
+  document.querySelectorAll(".file-name").forEach((el) => {
+    const fallback = el.dataset.defaultName || "선택된 파일 없음";
+    el.textContent = fallback;
+    el.classList.toggle("is-empty", !el.dataset.defaultName);
+  });
   report.innerHTML = `<p class="muted">${emptyReport}</p>`;
 }
 
-if (location.hash === "#sample") {
-  loadSample().catch(showError);
-}
-
-document.querySelector("#upload").addEventListener("submit", async (event) => {
+document.querySelector("#upload")?.addEventListener("submit", (event) => {
   event.preventDefault();
-  errorBox.hidden = true;
-  const settlementFile = document.querySelector("#settlement-file").files[0];
-  const internalFile = document.querySelector("#internal-file").files[0];
-  try {
-    if (!settlementFile || !internalFile) {
-      await loadSample();
-      return;
-    }
-    const response = await fetch("/api/reconcile", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        settlementFile: await filePayload(settlementFile),
-        internalFile: await filePayload(internalFile),
-      }),
-    });
-    const body = await response.json();
-    if (!response.ok) throw new Error(body.error || "파일을 대조하지 못했습니다.");
-    render(body);
-  } catch (error) {
-    showError(error);
-  }
+  loadSample().catch((error) => {
+    errorBox.hidden = false;
+    errorBox.textContent = error instanceof Error ? error.message : "대조하지 못했습니다.";
+  });
 });
 
 document.querySelector("#reset-run")?.addEventListener("click", resetView);
